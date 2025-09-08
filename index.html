@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Galaxy Player - Reprodutor Completo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #4deeea;
+            --cor-secundaria: #74ee15;
+            --cor-destaque: #f000ff;
+            --preto: #000000;
+            --preto-escuro: #0a0a0a;
+            --preto-meio: #111111;
+            --preto-card: #1a1a1a;
+            --branco: #ffffff;
+            --cinza: #888888;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--preto);
+            color: var(--branco);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .universo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(77, 238, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(116, 238, 21, 0.1) 0%, transparent 50%);
+        }
+
+        .estrela {
+            position: absolute;
+            background: var(--branco);
+            border-radius: 50%;
+            animation: brilhar 8s infinite;
+        }
+
+        @keyframes brilhar {
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.2); }
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        header {
+            background: var(--preto-card);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(77, 238, 234, 0.2);
+            box-shadow: 0 0 30px rgba(77, 238, 234, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, var(--cor-primaria), var(--cor-secundaria));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(77, 238, 234, 0.5);
+        }
+
+        .logo p {
+            color: var(--cinza);
+            margin-top: 5px;
+        }
+
+        .url-input {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .url-input input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: var(--preto-meio);
+            color: var(--branco);
+            border: 2px solid rgba(77, 238, 234, 0.3);
+            font-size: 16px;
+        }
+
+        .url-input input:focus {
+            outline: none;
+            border-color: var(--cor-primaria);
+            box-shadow: 0 0 20px rgba(77, 238, 234, 0.3);
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cor-primaria), var(--preto-card));
+            color: var(--branco);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--cor-secundaria), var(--preto-card));
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(116, 238, 21, 0.3);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .player-container {
+            background: var(--preto-card);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(77, 238, 234, 0.2);
+        }
+
+        #iptv-player {
+            width: 100%;
+            height: 500px;
+            background: var(--preto);
+        }
+
+        .player-info {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .player-info h2 {
+            color: var(--cor-primaria);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: var(--preto-meio);
+            flex-wrap: wrap;
+        }
+
+        .sidebar {
+            background: var(--preto-card);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(77, 238, 234, 0.2);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--preto-meio);
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--cor-primaria);
+            border-radius: 10px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--cor-primaria);
+        }
+
+        .category-header h2 {
+            color: var(--cor-primaria);
+            font-size: 1.3rem;
+        }
+
+        .channel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .channel-item {
+            padding: 15px;
+            background: var(--preto-meio);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid var(--cor-primaria);
+        }
+
+        .channel-item:hover {
+            background: rgba(77, 238, 234, 0.1);
+            transform: translateX(5px);
+        }
+
+        .channel-item.active {
+            background: rgba(77, 238, 234, 0.2);
+            border-left: 3px solid var(--cor-secundaria);
+        }
+
+        .channel-name {
+            font-weight: bold;
+            color: var(--branco);
+            margin-bottom: 5px;
+        }
+
+        .channel-group {
+            color: var(--cinza);
+            font-size: 0.9rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .content-section {
+            background: var(--preto-card);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(77, 238, 234, 0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--cor-primaria);
+        }
+
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: girar 2s infinite linear;
+        }
+
+        @keyframes girar {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            margin: 20px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: var(--preto-meio);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(77, 238, 234, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--cor-primaria);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--cinza);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .url-input {
+                flex-direction: column;
+            }
+            
+            .url-input input {
+                min-width: unset;
+            }
+            
+            #iptv-player {
+                height: 300px;
+            }
+            
+            .content-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .player-controls {
+                justify-content: center;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="universo" id="universo"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1><i class="fas fa-globe"></i> IPTV GALAXY PLAYER</h1>
+                <p>Reprodutor Completo de Listas IPTV</p>
+            </div>
+            
+            <div class="url-input">
+                <input type="url" id="playlist-url" placeholder="Cole aqui o link da sua lista M3U" value="">
+                <button class="btn btn-primary" onclick="carregarPlaylist()">
+                    <i class="fas fa-satellite"></i> Carregar Lista
+                </button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="player-container">
+                <video id="iptv-player" class="video-js vjs-default-skin" controls preload="auto" playsinline>
+                    <p class="vjs-no-js">
+                        Para visualizar este vídeo, por favor ative JavaScript e considere atualizar para um navegador que
+                        <a href="https://videojs.com/html5-video-support/" target="_blank">suporte vídeo HTML5</a>
+                    </p>
+                </video>
+                <div class="player-info">
+                    <h2 id="current-channel">Selecione um canal para começar</h2>
+                    <p id="current-info">Nenhum canal selecionado</p>
+                </div>
+                <div class="player-controls">
+                    <button class="btn btn-primary" onclick="player.play()">
+                        <i class="fas fa-play"></i> Play
+                    </button>
+                    <button class="btn btn-primary" onclick="player.pause()">
+                        <i class="fas fa-pause"></i> Pause
+                    </button>
+                    <button class="btn btn-primary" onclick="toggleFullscreen()">
+                        <i class="fas fa-expand"></i> Tela Cheia
+                    </button>
+                    <button class="btn btn-primary" onclick="voltarParaLista()">
+                        <i class="fas fa-list"></i> Voltar para Lista
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="category-header">
+                    <i class="fas fa-tv"></i>
+                    <h2>Canais Disponíveis</h2>
+                </div>
+                <div id="channel-list">
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Cole uma URL de lista M3U acima</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="total-canais">0</div>
+                <div class="stat-label">Canais Totais</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="canais-ativos">0</div>
+                <div class="stat-label">Canais Ativos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="categorias">0</div>
+                <div class="stat-label">Categorias</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        // Inicializar player Video.js
+        const player = videojs('iptv-player', {
+            liveui: true,
+            playbackRates: [0.5, 1, 1.5, 2],
+            responsive: true,
+            fluid: true
+        });
+
+        // Criar universo de estrelas
+        function criarUniverso() {
+            const universo = document.getElementById('universo');
+            for (let i = 0; i < 150; i++) {
+                const estrela = document.createElement('div');
+                estrela.className = 'estrela';
+                
+                const size = Math.random() * 3;
+                estrela.style.width = `${size}px`;
+                estrela.style.height = `${size}px`;
+                estrela.style.left = `${Math.random() * 100}%`;
+                estrela.style.top = `${Math.random() * 100}%`;
+                estrela.style.animationDelay = `${Math.random() * 8}s`;
+                
+                universo.appendChild(estrela);
+            }
+        }
+
+        // Carregar playlist da API
+        async function carregarPlaylist() {
+            const url = document.getElementById('playlist-url').value.trim();
+            
+            if (!url) {
+                mostrarErro('Por favor, cole uma URL válida');
+                return;
+            }
+
+            const channelList = document.getElementById('channel-list');
+            channelList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p>Carregando canais...</p></div>';
+
+            try {
+                const response = await fetch(`/api/playlist?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                exibirCanais(data);
+                exibirEstatisticas(data);
+
+            } catch (error) {
+                mostrarErro('Erro ao carregar lista: ' + error.message);
+            }
+        }
+
+        // Exibir canais na lista
+        function exibirCanais(canais) {
+            const channelList = document.getElementById('channel-list');
+            
+            if (canais.length === 0) {
+                channelList.innerHTML = '<div class="error">Nenhum canal encontrado na lista</div>';
+                return;
+            }
+
+            let html = '';
+            canais.forEach((canal, index) => {
+                html += `
+                    <div class="channel-item" onclick="reproduzirCanal(${index})">
+                        <div class="channel-name">${canal.name || 'Canal sem nome'}</div>
+                        <div class="channel-group">${canal.group || 'Sem categoria'}</div>
+                    </div>
+                `;
+            });
+
+            channelList.innerHTML = html;
+        }
+
+        // Exibir estatísticas
+        function exibirEstatisticas(canais) {
+            const stats = document.getElementById('stats');
+            stats.style.display = 'grid';
+
+            // Contar categorias únicas
+            const categorias = new Set(canais.map(c => c.group).filter(Boolean));
+            
+            document.getElementById('total-canais').textContent = canais.length;
+            document.getElementById('canais-ativos').textContent = canais.filter(c => c.url).length;
+            document.getElementById('categorias').textContent = categorias.size;
+        }
+
+        // Reproduzir canal
+        function reproduzirCanal(index) {
+            const canais = window.currentPlaylist;
+            const canal = canais[index];
+
+            if (!canal.url) {
+                mostrarErro('Este canal não possui URL válida');
+                return;
+            }
+
+            // Destacar canal selecionado
+            document.querySelectorAll('.channel-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Reproduzir no player
+            player.src({ type: 'video/mp4', src: canal.url });
+            player.play();
+
+            document.getElementById('current-channel').textContent = canal.name || 'Canal sem nome';
+            document.getElementById('current-info').textContent = `Categoria: ${canal.group || 'N/A'}`;
+        }
+
+        // Voltar para lista
+        function voltarParaLista() {
+            player.pause();
+            document.getElementById('current-channel').textContent = 'Selecione um canal para começar';
+            document.getElementById('current-info').textContent = 'Nenhum canal selecionado';
+        }
+
+        // Tela cheia
+        function toggleFullscreen() {
+            if (player.isFullscreen()) {
+                player.exitFullscreen();
+            } else {
+                player.requestFullscreen();
+            }
+        }
+
+        // Mostrar erro
+        function mostrarErro(mensagem) {
+            const channelList = document.getElementById('channel-list');
+            channelList.innerHTML = `<div class="error">${mensagem}</div>`;
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            criarUniverso();
+            
+            // Exemplo de URL (pode ser removido)
+            document.getElementById('playlist-url').value = 'https://exemplo.com/lista.m3u';
+            
+            player.ready(function() {
+                console.log('IPTV Galaxy Player pronto!');
+            });
+        });
+
+        // Teclas de atalho
+        document.addEventListener('keydown', function(e) {
+            if (e.key === ' ') {
+                e.preventDefault();
+                if (player.paused()) {
+                    player.play();
+                } else {
+                    player.pause();
+                }
+            }
+            
+            if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
